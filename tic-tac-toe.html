@@ -10,6 +10,10 @@
             text-align: center;
             margin-top: 50px;
         }
+        .board-container {
+            position: relative;
+            display: inline-block;
+        }
         .board {
             display: grid;
             grid-template-columns: repeat(3, 100px);
@@ -30,6 +34,14 @@
             pointer-events: none;
             color: gray;
         }
+        .line {
+            position: absolute;
+            background-color: red;
+            height: 5px;
+            width: 0;
+            transform-origin: left center;
+            z-index: 1;
+        }
         .message {
             margin-top: 20px;
             font-size: 1.2em;
@@ -38,16 +50,19 @@
 </head>
 <body>
     <h1>Tic Tac Toe</h1>
-    <div class="board" id="board">
-        <div class="cell" data-index="0"></div>
-        <div class="cell" data-index="1"></div>
-        <div class="cell" data-index="2"></div>
-        <div class="cell" data-index="3"></div>
-        <div class="cell" data-index="4"></div>
-        <div class="cell" data-index="5"></div>
-        <div class="cell" data-index="6"></div>
-        <div class="cell" data-index="7"></div>
-        <div class="cell" data-index="8"></div>
+    <div class="board-container">
+        <div class="board" id="board">
+            <div class="cell" data-index="0"></div>
+            <div class="cell" data-index="1"></div>
+            <div class="cell" data-index="2"></div>
+            <div class="cell" data-index="3"></div>
+            <div class="cell" data-index="4"></div>
+            <div class="cell" data-index="5"></div>
+            <div class="cell" data-index="6"></div>
+            <div class="cell" data-index="7"></div>
+            <div class="cell" data-index="8"></div>
+        </div>
+        <div class="line" id="line"></div>
     </div>
     <div class="message" id="message">Player X's turn</div>
     <button onclick="resetGame()">Reset Game</button>
@@ -65,6 +80,7 @@
 
         const cells = document.querySelectorAll('.cell');
         const message = document.getElementById('message');
+        const line = document.getElementById('line');
 
         cells.forEach(cell => {
             cell.addEventListener('click', handleCellClick);
@@ -99,9 +115,35 @@
         }
 
         function checkWin() {
-            return winningConditions.some(condition => {
-                return condition.every(index => board[index] === currentPlayer);
-            });
+            for (let condition of winningConditions) {
+                const [a, b, c] = condition;
+                if (board[a] === currentPlayer && board[b] === currentPlayer && board[c] === currentPlayer) {
+                    drawLine(condition);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function drawLine(condition) {
+            const [start, , end] = condition;
+            const startCell = cells[start].getBoundingClientRect();
+            const endCell = cells[end].getBoundingClientRect();
+
+            const boardRect = document.getElementById('board').getBoundingClientRect();
+
+            const startX = startCell.left + startCell.width / 2 - boardRect.left;
+            const startY = startCell.top + startCell.height / 2 - boardRect.top;
+            const endX = endCell.left + endCell.width / 2 - boardRect.left;
+            const endY = endCell.top + endCell.height / 2 - boardRect.top;
+
+            const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI;
+            const distance = Math.sqrt((endX - startX) ** 2 + (endY - startY) ** 2);
+
+            line.style.width = `${distance}px`;
+            line.style.transform = `rotate(${angle}deg)`;
+            line.style.left = `${startX}px`;
+            line.style.top = `${startY}px`;
         }
 
         function resetGame() {
@@ -113,6 +155,7 @@
                 cell.textContent = '';
                 cell.classList.remove('taken');
             });
+            line.style.width = '0';
         }
     </script>
 </body>
